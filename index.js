@@ -22,8 +22,8 @@ const start = async () => {
   try {
     await mongoose.connect(process.env.DB_URL, {
       tls: true
-    }).then(() => console.log('\x1b[32m%s\x1b[1m', 'DB connected'));
-    app.listen(PORT, () => console.log('\x1b[32m%s\x1b[1m', `Server started on port ${PORT}`));
+    }).then(() => console.log('\x1b[1m\x1b[32m' + 'DB connected' + '\x1b[0m'));
+    app.listen(PORT, () => console.log('\x1b[1m\x1b[32m' + `Server started on port ${PORT}` + '\x1b[0m'));
   } catch (e) {
     console.log(e);
   }

@@ -5,11 +5,13 @@ const express = require('express');
 const cors = require('cors');
 const router = require('./lib/router');
 const errorMiddleware = require('./lib/middleware/error-middleware');
+const refererMiddleware = require('./lib/middleware/referer-middleware');
 
 const PORT = process.env.PORT || 7000;
 const app = express();
 
 app.use(express.json());
+app.use(refererMiddleware);
 app.use(cors({
   credentials: true,
   origin: process.env.CLIENT_URL

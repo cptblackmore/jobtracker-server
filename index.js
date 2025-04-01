@@ -14,7 +14,7 @@ app.use(express.json());
 app.use(refererMiddleware);
 app.use(cors({
   credentials: true,
-  origin: process.env.CLIENT_URL
+  origin: [process.env.CLIENT_URL, process.env.CLIENT_DEV_URL]
 }));
 app.use(cookieParser());
 app.use('/api', router);

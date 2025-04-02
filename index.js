@@ -11,6 +11,7 @@ const PORT = process.env.PORT || 7000;
 const app = express();
 
 app.use(express.json());
+app.set('trust proxy', 1);
 app.use(refererMiddleware);
 app.use(cors({
   credentials: true,

@@ -1,4 +1,4 @@
-# JobTracker Server – сервер для агрегатора вакансий
+# JobTracker Server — сервер для агрегатора вакансий
 
 [![Node.js](https://img.shields.io/badge/Node.js-18%2B-green)](https://nodejs.org/)
 [![Express](https://img.shields.io/badge/Express-4.x-lightgrey)](https://expressjs.com/)
@@ -7,7 +7,7 @@
 [![REST](https://img.shields.io/badge/API-RESTful-orange)](https://restfulapi.net/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://github.com/cptblackmore/jobtracker-server/blob/main/LICENSE)
 
-**JobTracker Server** - RESTful API-сервер, созданный как бэкенд для моего клиентского приложения [JobTracker](https://github.com/cptblackmore/jobtracker) — агрегатора вакансий с разных источников.
+**JobTracker Server** — RESTful API-сервер, созданный как бэкенд для моего клиентского приложения [JobTracker](https://github.com/cptblackmore/jobtracker) — агрегатора вакансий с разных источников.
 
 Он предоставляет безопасную авторизацию с JWT, хранение избранных вакансий в БД, проксирование запросов к внешним API (HH, SuperJob, Trudvsem) и обработку местоположений для автокомплита/подстановки в проксируемый запрос.
 
@@ -321,9 +321,9 @@
 ## Установка и запуск
 
 0. Перед началом убедитесь, что у вас есть:
-    - **[Node.js версии 18+](https://nodejs.org/)**
-    - **[Git](https://git-scm.com/)**
-    - **[MongoDB Atlas аккаунт](https://www.mongodb.com/atlas/database)** _(локально Mongo ставить не нужно)_
+    - Node.js версии **18 и выше** — [скачать с nodejs.org](https://nodejs.org/)
+    - Git — [скачать с git-scm.com](https://git-scm.com/)
+    - MongoDB Atlas аккаунт — [создать на mongodb.com](https://www.mongodb.com/atlas/database)
       > ⚠️ Локальная установка MongoDB **не требуется**! Вы можете использовать облачный хостинг MongoDB Atlas (есть бесплатный тариф).
 1. Клонируйте репозиторий: `git clone https://github.com/cptblackmore/jobtracker-server`.
 2. Перейдите в него: `cd jobtracker-server`.
@@ -337,9 +337,9 @@
     - Остальные поля можно оставить по умолчанию (см. [подробности](#переменные-окружения-env), если хотите их изменить).
 6. Запустите сервер: `npm run start` (или `npm run dev`, если нужен nodemon).
 
-### Пример готового .env
+### Пример готового `.env`
 
-```
+```env
 PORT=7000
 API_URL=http://localhost:7000
 CLIENT_URL=http://localhost:5173

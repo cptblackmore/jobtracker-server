@@ -14,10 +14,10 @@
 Создан на **Express** + **MongoDB** с акцентом на масштабируемость, безопасность и гибкость.
 
 ## Основной функционал
-    
+
 - **Регистрация и активация:** регистрация по e-mail и подтверждение через письмо, повторная отправка с кулдауном.
 - **JWT-аутентификация:** генерация access/refresh-токенов, их обновление и безопасная отправка на клиент.
-- **Избранное:** синхронизация избранных вакансий подтверждённого пользователя между клиентом и БД, их добавление и удаление. 
+- **Избранное:** синхронизация избранных вакансий подтверждённого пользователя между клиентом и БД, их добавление и удаление.
 - **Прокси:** безопасное перенаправление запросов на разрешённые API источников вакансий, с защитой от SSRF.
 - **Поиск мест:** fuzzy-поиск городов/регионов в нормализованной JSON коллекции.
 - **Безопасность:** ограничение доверенных доменов (Referer, CORS), httpOnly + Secure refresh-куки, валидация входных данных, защита проксируемых запросов по вайт-листу и rate-limiter.
@@ -96,16 +96,16 @@
 5. `accessToken` и `userDto` возвращаются в теле ответа.
 6. Клиент подтверждает получение через `/api/refresh/ack`.
 7. Сервер сохраняет `pendingRefreshToken` как основной `refreshToken`.
-    > Это защищает от потери токенов при нестабильном соединении или из-за несвоевременного закрытия вкладки, обеспечивая атомарность.
+   > Это защищает от потери токенов при нестабильном соединении или из-за несвоевременного закрытия вкладки, обеспечивая атомарность.
 
 #### Выход из аккаунта (`/api/logout`)
 
 1. Клиент вызывает `/api/logout`.
 2. Сервер удаляет `refreshToken` из БД.
 3. Возвращается пустая cookie:
-    ```
-    Set-Cookie: refreshToken=; HttpOnly; Secure; SameSite=none; Max-Age=0
-    ```
+   ```
+   Set-Cookie: refreshToken=; HttpOnly; Secure; SameSite=none; Max-Age=0
+   ```
 
 ### Избранное
 
@@ -141,6 +141,7 @@
   - Специфичные id для каждого источника
 
 Пример из `places.json`:
+
 ```json
 {
   "regions": [
@@ -171,17 +172,17 @@
 - На его основе формируются массивы `cities`, `regions`, `places`.
 - Для каждого массива создаётся отдельный индекс через **Fuse.js** — лёгкий и быстрый fuzzy-поисковик по строкам.
 - При запросе на `/places?place=...` выполняется:
-    1. Fuzzy-поиск по массиву `places`
-    2. Обрезка до 5 релевантных результатов
-    3. Возврат клиенту массива объектов такого вида:
-        ```json
-        { 
-          "id": "1", 
-          "name": "Москва", 
-          "type": "city" 
-        }
-        ```
-        (*см. [примеры](#примеры-api-запросов), раздел **Поиск местоположений***)
+  1. Fuzzy-поиск по массиву `places`
+  2. Обрезка до 5 релевантных результатов
+  3. Возврат клиенту массива объектов такого вида:
+     ```json
+     {
+       "id": "1",
+       "name": "Москва",
+       "type": "city"
+     }
+     ```
+     (\*см. [примеры](#примеры-api-запросов), раздел **Поиск местоположений\***)
 
 > Помимо автокомплита, та же коллекция `places.json` используется для подстановки специфичных id мест в проксируемые запросы — см. следующую главу.
 
@@ -209,69 +210,73 @@
 Маркеры позволяют клиенту указывать обобщённое местоположение, а сервер подставляет специфичный id, соответствующий источнику.
 
 Маркер состоит из нескольких сегментов, разделённых тильдой `~`, в формате `place~<method>~<scope>~<value>`:
-  1. `place` — маркер местоположений. `placesMiddleware` ищет его в каждом запросе.
-  2. `<method>` — `name` - fuzzy-поиск по названию, `id` - точный поиск по общему id.
-  3. `<scope>` — тип искомого местоположения. Используется только для fuzzy-поиска.
-      - `city` — поиск только по городам
-      - `region` — поиск только по регионам
-      - `""` (пустая строка) — поиск по всем местоположениям
-  4. `<value>` — название места или его id.
+
+1. `place` — маркер местоположений. `placesMiddleware` ищет его в каждом запросе.
+2. `<method>` — `name` - fuzzy-поиск по названию, `id` - точный поиск по общему id.
+3. `<scope>` — тип искомого местоположения. Используется только для fuzzy-поиска.
+   - `city` — поиск только по городам
+   - `region` — поиск только по регионам
+   - `""` (пустая строка) — поиск по всем местоположениям
+4. `<value>` — название места или его id.
 
 > `placesMiddleware` гибко интерпретирует подход к поиску в зависимости от значений второго и третьего сегментов.
 
 ##### Примеры интерпретации
 
 **Пример 1**:
+
 1. Запрос:
-    ```
-    GET /api/vacanciesProxy?area=place~name~~Москв
-    X-Target-Url: https://api.hh.ru/vacancies 
-    X-Target-Source: hh
-    ```
+   ```
+   GET /api/vacanciesProxy?area=place~name~~Москв
+   X-Target-Url: https://api.hh.ru/vacancies
+   X-Target-Source: hh
+   ```
 2. Fuzzy-поиск со строкой "Москв" по всем местоположениям (третий сегмент пропущен):
-    ```json
-    {
-      "id": "1",
-      "name": "Москва",
-      "hh": "1",
-      "tv": "77",
-      "sj": "4"
-    },
-    ```
+   ```json
+   {
+     "id": "1",
+     "name": "Москва",
+     "hh": "1",
+     "tv": "77",
+     "sj": "4"
+   },
+   ```
 3. Извлекается значение `1` из поля `hh`.
 4. Запрос трансформируется:
-    ```
-    GET /api/vacanciesProxy?area=1
-    ```
+   ```
+   GET /api/vacanciesProxy?area=1
+   ```
 5. Пользователь получает вакансии только из Москвы.
 
 **Пример 2**:
+
 1. Запрос:
-    ```
-    GET /api/vacanciesProxy?area=place~name~region~Москв
-    X-Target-Url: https://api.hh.ru/vacancies 
-    X-Target-Source: hh
-    ```
+   ```
+   GET /api/vacanciesProxy?area=place~name~region~Москв
+   X-Target-Url: https://api.hh.ru/vacancies
+   X-Target-Source: hh
+   ```
 2. Fuzzy-поиск со строкой "Москв" по регионам находит `Московская область`.
 3. Извлекается значение `2019` из поля `hh`.
 4. Запрос трансформируется:
-    ```
-    GET /api/vacanciesProxy?area=2019
-    ```
+   ```
+   GET /api/vacanciesProxy?area=2019
+   ```
 5. Пользователь получает вакансии в пределах Московской области.
 
 **Пример 3**:
+
 1. Запрос:
-    ```
-    GET /api/vacanciesProxy?area=place~id~~1
-    X-Target-Url: https://api.hh.ru/vacancies 
-    X-Target-Source: hh
-    ```
+   ```
+   GET /api/vacanciesProxy?area=place~id~~1
+   X-Target-Url: https://api.hh.ru/vacancies
+   X-Target-Source: hh
+   ```
 2. Точный поиск по общим id находит объект с `id` = `1` (Москва) и извлекает id `hh` = `1`.
 3. Запрос трансформируется:
-    ```
-    GET /api/vacanciesProxy?area=1
-    ```
+   ```
+   GET /api/vacanciesProxy?area=1
+   ```
 4. Пользователь получает вакансии только из Москвы.
 
 ### Переменные окружения (`.env`)
@@ -321,20 +326,20 @@
 ## Установка и запуск
 
 0. Перед началом убедитесь, что у вас есть:
-    - Node.js версии **18 и выше** — [скачать с nodejs.org](https://nodejs.org/)
-    - Git — [скачать с git-scm.com](https://git-scm.com/)
-    - MongoDB Atlas аккаунт — [создать на mongodb.com](https://www.mongodb.com/atlas/database)
-      > ⚠️ Локальная установка MongoDB **не требуется**! Вы можете использовать облачный хостинг MongoDB Atlas (есть бесплатный тариф).
+   - Node.js версии **18 и выше** — [скачать с nodejs.org](https://nodejs.org/)
+   - Git — [скачать с git-scm.com](https://git-scm.com/)
+   - MongoDB Atlas аккаунт — [создать на mongodb.com](https://www.mongodb.com/atlas/database)
+     > ⚠️ Локальная установка MongoDB **не требуется**! Вы можете использовать облачный хостинг MongoDB Atlas (есть бесплатный тариф).
 1. Клонируйте репозиторий: `git clone https://github.com/cptblackmore/jobtracker-server`
 2. Перейдите в него: `cd jobtracker-server`
 3. Установите зависимости: `npm install`
 4. Создайте файл с переменными окружения: `cp .env.example .env`
 5. Откройте `.env` и заполните поля:
-    - `DB_URL` (**обязательно**) — скопируйте ссылку для подключения к кластеру на MongoDB Atlas и укажите свой пароль вместо `<db_password>`
-    - `JWT_ACCESS_SECRET` и `JWT_REFRESH_SECRET` (опционально) — любые строки. В рамках тестирования можно оставить по умолчанию.
-    - `MAIL_HOST`, `MAIL_PORT`, `MAIL_USER`, `MAIL_PASS` (опционально) — данные SMTP вашего почтового сервиса. Нужны только для отправки писем активации новым пользователям.
-    - `CLIENT_URL` и `ALLOWED_CLIENTS` (опционально) — если клиентская часть хостится на другом адресе (не `http://localhost:5173`), то нужно указать его в `CLIENT_URL`, а в `ALLOWED_CLIENTS` добавить после запятой.
-    - Остальные поля можно оставить по умолчанию (см. [подробности](#переменные-окружения-env), если хотите их изменить).
+   - `DB_URL` (**обязательно**) — скопируйте ссылку для подключения к кластеру на MongoDB Atlas и укажите свой пароль вместо `<db_password>`
+   - `JWT_ACCESS_SECRET` и `JWT_REFRESH_SECRET` (опционально) — любые строки. В рамках тестирования можно оставить по умолчанию.
+   - `MAIL_HOST`, `MAIL_PORT`, `MAIL_USER`, `MAIL_PASS` (опционально) — данные SMTP вашего почтового сервиса. Нужны только для отправки писем активации новым пользователям.
+   - `CLIENT_URL` и `ALLOWED_CLIENTS` (опционально) — если клиентская часть хостится на другом адресе (не `http://localhost:5173`), то нужно указать его в `CLIENT_URL`, а в `ALLOWED_CLIENTS` добавить после запятой.
+   - Остальные поля можно оставить по умолчанию (см. [подробности](#переменные-окружения-env), если хотите их изменить).
 6. Запустите сервер: `npm run start` (или `npm run dev`, если нужен nodemon).
 
 ### Пример готового `.env`
@@ -389,43 +394,52 @@ VACANCIES_LIMIT_MAX=200
 ### Регистрация
 
 **Запрос**:
+
 ```
 POST /api/registration
 Content-Type: application/json
 ```
+
 **Тело запроса**:
+
 ```json
 {
   "email": "user@mail.com",
   "password": "123456"
 }
 ```
-**Ответ**: 
+
+**Ответ**:
+
 ```
 Set-Cookie: refreshToken=<new_refresh_token>; HttpOnly; Secure; SameSite=none
 ```
+
 ```json
 {
   "accessToken": "<new_access_token>",
   "userDto": {
-      "email": "user@mail.com",
-      "id": "6818ab3a90a937ec7651de13",
-      "isActivated": false,
-      "nextResendAt": "2025-05-05T12:13:42.287Z"
+    "email": "user@mail.com",
+    "id": "6818ab3a90a937ec7651de13",
+    "isActivated": false,
+    "nextResendAt": "2025-05-05T12:13:42.287Z"
   }
 }
 ```
+
 > После регистрации по указанной почте отправится письмо со ссылкой для активации аккаунта.
 
 ### Повторная отправка письма
 
 **Запрос**:
+
 ```
 GET /api/resend
 Cookie: refreshToken=<refresh_token>
 ```
 
 **Ответ**:
+
 ```json
 {
   "userDto": {
@@ -436,25 +450,30 @@ Cookie: refreshToken=<refresh_token>
   }
 }
 ```
+
 > Повторная отправка письма вновь будет доступна по временной метке в `nextResendAt`, которая высчитывается по кулдауну, указанному в переменной окружения `RESEND_COOLDOWN`.
 
 ### Активация
 
 **Запрос**:
+
 ```
 GET /api/activate/:link
 ```
+
 > При активации происходит редирект по адресу, указанному в переменной окружения `CLIENT_URL`.
 
 ### Логин
 
 **Запрос**:
+
 ```
 POST /api/login
 Content-Type: application/json
 ```
 
 **Тело запроса**:
+
 ```json
 {
   "email": "user@mail.com",
@@ -463,19 +482,22 @@ Content-Type: application/json
 ```
 
 **Ответ**:
+
 ```
 Set-Cookie: refreshToken=<new_refresh_token>; HttpOnly; Secure; SameSite=none
 ```
+
 ```json
 {
   "accessToken": "<new_access_token>",
   "userDto": {
-      "email": "user@mail.com",
-      "id": "6818ab3a90a937ec7651de13",
-      "isActivated": true
+    "email": "user@mail.com",
+    "id": "6818ab3a90a937ec7651de13",
+    "isActivated": true
   }
 }
 ```
+
 > refreshToken приходит в HttpOnly-cookie, а не в теле ответа.
 
 ### Обновление токенов (refresh)
@@ -488,9 +510,11 @@ Cookie: refreshToken=<refresh_token>
 ```
 
 **Ответ**:
+
 ```
 Set-Cookie: refreshToken=<new_refresh_token>; HttpOnly; Secure; SameSite=none
 ```
+
 ```json
 {
   "accessToken": "<new_access_token>",
@@ -529,14 +553,17 @@ Cookie: refreshToken=<refresh_token>
 ```
 
 **Ответ**:
+
 ```
 Set-Cookie: refreshToken=; HttpOnly; Secure; SameSite=none; Max-Age=0
 ```
+
 ```json
 {
   "message": "Logged out successfully"
 }
 ```
+
 > refreshToken удаляется из httpOnly-cookie.
 
 ### Получение избранного
@@ -577,10 +604,7 @@ Content-Type: application/json
 
 ```json
 {
-  "favorites": [
-    "sj_49640647",
-    "hh_118530618"
-  ]
+  "favorites": ["sj_49640647", "hh_118530618"]
 }
 ```
 
@@ -612,9 +636,7 @@ Content-Type: application/json
 
 ```json
 {
-  "favorites": [
-    "hh_117662661"
-  ]
+  "favorites": ["hh_117662661"]
 }
 ```
 
@@ -622,9 +644,7 @@ Content-Type: application/json
 
 ```json
 {
-  "favorites": [
-    "hh_117662661"
-  ],
+  "favorites": ["hh_117662661"],
   "id": "6818ab3b90a937ec7651de15"
 }
 ```
@@ -748,7 +768,8 @@ x-target-source: hh
 
 #### Проверка в реальных условиях
 
-Сервер работает вместе с клиентом [JobTracker](https://github.com/cptblackmore/jobtracker), развёрнутым по адресу: 
+Сервер работает вместе с клиентом [JobTracker](https://github.com/cptblackmore/jobtracker), развёрнутым по адресу:
+
 > [https://cptblackmore-jobtracker.netlify.app](https://cptblackmore-jobtracker.netlify.app)
 
 #### Проверка вручную
@@ -756,19 +777,20 @@ x-target-source: hh
 Чтобы отправить запрос напрямую (например, в Postman), обратите внимание:
 
 - Во **всех** запросах, кроме `/api/activate/:link`, нужно добавить заголовок:
-`Referer: https://cptblackmore-jobtracker.netlify.app`
+  `Referer: https://cptblackmore-jobtracker.netlify.app`
   > ⚠️ **Сервер отклонит любые запросы с неизвестных `Referer` или `Origin`**, не указанных в `ALLOWED_CLIENTS` в `.env`.
 - К запросам `GET`/`POST`/`PUT` `/api/favorites` нужно добавить заголовок:
-`Authorization: Bearer <access_token>`
+  `Authorization: Bearer <access_token>`
   > Избранное на сервере доступно только авторизованным пользователям. Сам accessToken можно получить в ответах при регистрации/логине/refresh (см. [примеры](#примеры-api-запросов)).
 - В `GET /api/vacanciesProxy` нужно добавить заголовки:
   - `X-Target-Url: <url>` — адрес внешнего API. Разрешены только адреса, совпадающие с доменами, указанными в `ALLOWED_TARGETS` в `.env`. Например:
-`https://api.superjob.ru/vacancies`, `https://api.hh.ru/vacancies`, `https://opendata.trudvsem.ru/vacancies`
+    `https://api.superjob.ru/vacancies`, `https://api.hh.ru/vacancies`, `https://opendata.trudvsem.ru/vacancies`
   - `X-Target-Source: <source>` (опционально) — сокращённое название источника внешнего API, используемое при наличии маркера `place` (см. [примеры](#примеры-api-запросов), раздел **Поиск вакансий по местоположению**). Например: `sj`, `hh`, `tv`.
 
 ## Author
 
-**Victor** *aka* **captain_blackmore**
+**Victor** _aka_ **captain_blackmore**
+
 - [Telegram](https://t.me/captain_blackmore)
 - [Github](https://github.com/cptblackmore)
 

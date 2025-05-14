@@ -325,12 +325,12 @@
     - Git — [скачать с git-scm.com](https://git-scm.com/)
     - MongoDB Atlas аккаунт — [создать на mongodb.com](https://www.mongodb.com/atlas/database)
       > ⚠️ Локальная установка MongoDB **не требуется**! Вы можете использовать облачный хостинг MongoDB Atlas (есть бесплатный тариф).
-1. Клонируйте репозиторий: `git clone https://github.com/cptblackmore/jobtracker-server`.
-2. Перейдите в него: `cd jobtracker-server`.
-3. Установите зависимости: `npm install`.
-4. Создайте файл с переменными окружения: `cp .env.example .env`.
+1. Клонируйте репозиторий: `git clone https://github.com/cptblackmore/jobtracker-server`
+2. Перейдите в него: `cd jobtracker-server`
+3. Установите зависимости: `npm install`
+4. Создайте файл с переменными окружения: `cp .env.example .env`
 5. Откройте `.env` и заполните поля:
-    - `DB_URL` (**обязательно**) — скопируйте ссылку для подключения к кластеру на MongoDB Atlas и укажите свой пароль вместо `<db_password>`.
+    - `DB_URL` (**обязательно**) — скопируйте ссылку для подключения к кластеру на MongoDB Atlas и укажите свой пароль вместо `<db_password>`
     - `JWT_ACCESS_SECRET` и `JWT_REFRESH_SECRET` (опционально) — любые строки. В рамках тестирования можно оставить по умолчанию.
     - `MAIL_HOST`, `MAIL_PORT`, `MAIL_USER`, `MAIL_PASS` (опционально) — данные SMTP вашего почтового сервиса. Нужны только для отправки писем активации новым пользователям.
     - `CLIENT_URL` и `ALLOWED_CLIENTS` (опционально) — если клиентская часть хостится на другом адресе (не `http://localhost:5173`), то нужно указать его в `CLIENT_URL`, а в `ALLOWED_CLIENTS` добавить после запятой.

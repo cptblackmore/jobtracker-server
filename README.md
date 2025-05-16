@@ -57,7 +57,9 @@
 - **Services** — реализуют бизнес-логику (регистрация, логин, refresh, работа с избранным и т.д.)
 - **Models (Mongoose)** — схемы MongoDB (`user`, `token`, `favorites`)
 - **DTOs** — формируют безопасный и стабильный ответ для клиента (`userDto`, `favoritesDto`)
-- **Middlewares** — промежуточные обработчики (`auth-middleware`, `error-middleware` и др.)
+- **Middleware** — промежуточные обработчики (`auth-middleware`, `error-middleware` и др.)
+
+![Архитектура JobTracker Server](https://github.com/user-attachments/assets/7db4f29f-4a34-496a-95a2-f6f03ae284e4)
 
 ### Авторизация
 
